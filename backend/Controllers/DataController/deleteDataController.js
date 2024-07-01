@@ -2,7 +2,7 @@ import userModel from "../../Model/userModel.js";
 
 export const deleteDataController = async (req, res) => {
   try {
-    const userName = req.user.userName;
+    const userName = req.user.username;
    
     const { transactionId } = req.body;
 

@@ -2,7 +2,7 @@ import userModel from "../../Model/userModel.js";
 
 export const getDataController = async (req, res) => {
   try {
-    const userName = req.user.userName;
+    const userName = req.user.username;
     console.log(userName);
     if (!userName) {
       return res.status(400).send({ message: "Invalid credentials" });

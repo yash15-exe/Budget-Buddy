@@ -13,7 +13,7 @@ export const addDataController = async (req, res) => {
       message: data.message || "",
     };
 
-    const userName = req.user.userName;
+    const userName = req.user.username;
 
     const result = await userModel.findOneAndUpdate(
       { userName },

@@ -5,82 +5,63 @@ import { generateToken } from "../../utilities/jwt.js";
 const registerUser = async (req, res) => {
   console.log(req.body);
   try {
-    const request = req.body;
-
-    const userName = request.username;
-    const password = request.password;
-    const email = request.email;
+    const { username, password, email } = req.body;
+    console.log(req.body);
+    const existingUser = await userModel.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists with this username. Please login or choose a different username.",
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const existingUser = await userModel.findOne({ userName });
-    if (existingUser) {
-      res.send({
-        message:
-          "User already exist with this username, Please login or change username",
-      });
-      return;
-    }
     const newUser = new userModel({
-      userName,
+      userName: username,
       password: hashedPassword,
       email,
     });
 
-    newUser.save().then(() => {
-      const payload = { userName };
-      generateToken(payload).then((token) => {
-        res
-          .send({ token, message: "User registered Successfully" })
-          .status(200);
-      });
-    });
+    await newUser.save();
+
+    const payload = { username };
+    const token = await generateToken(payload);
+    return res.status(200).json({ token, message: "User registered successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      message: `Error in registering you in. Error: ${error}`,
+    return res.status(500).json({
+      message: `Error registering user. Error: ${error.message}`,
     });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
-    const request = req.body;
-    console.log(request);
-    const userName = request.username;
-    const password = request.password;
-
-    const existingUser = await userModel.findOne({ userName });
-    if (existingUser) {
-      const isValidPassword = await bcrypt.compare(
-        password,
-        existingUser.password
-      );
-
-      if (isValidPassword) {
-        const payload = { userName };
-        const token = await generateToken(payload);
-        res.json({ token:token, message: "Logged in Successfully" }).status(200);
-      } else {
-        res
-          .json({
-            message: `Incorrect Password, please enter a correct password`,
-          })
-          .status(400);
-      }
-    } else {
-      res
-        .json({
-          message: `The user doesnt exist, pls check the username`,
-        })
-        .status(401);
+    const { username, password } = req.body;
+    console.log(req.body);
+    console.log(username);
+    const existingUser = await userModel.findOne({ userName: username });
+    console.log(existingUser);
+    if (!existingUser) {
+      return res.status(401).json({
+        message: "User does not exist. Please check the username.",
+      });
     }
+
+    const isValidPassword = await bcrypt.compare(password, existingUser.password);
+    if (!isValidPassword) {
+      return res.status(400).json({
+        message: "Incorrect password. Please enter the correct password.",
+      });
+    }
+
+    const payload = { username };
+    const token = await generateToken(payload);
+    return res.status(200).json({ token, message: "Logged in successfully" });
   } catch (error) {
     console.log(error);
-    res
-      .json({
-        message: `Error in logging you in. Error: ${error}`,
-      })
-      .status(500);
+    return res.status(500).json({
+      message: `Error logging in. Error: ${error.message}`,
+    });
   }
 };
 

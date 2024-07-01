@@ -43,6 +43,7 @@ function LoginForm() {
       });
       if (response.status === 200) {
         const data = await response.json();
+        console.log(data);
         storeTokenInCookie(data.token);
         dispatch(login());
         navigate("/");
